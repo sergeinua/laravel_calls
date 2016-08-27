@@ -57,12 +57,12 @@ class CallController extends Controller
                     $sort_direction = 'desc';
                     break;
             }
-
+            //date range sorting
             if ($date_start = $request->input('sort_date_start')) {
-                $date_start = \DateTime::createFromFormat("d/m/Y", $date_start)->getTimestamp();
+                $date_start = \DateTime::createFromFormat("m/d/Y", $date_start)->getTimestamp();
             }
             if ($date_end = $request->input('sort_date_end')) {
-                $date_end = \DateTime::createFromFormat("d/m/Y", $date_end)->getTimestamp();
+                $date_end = \DateTime::createFromFormat("m/d/Y", $date_end)->getTimestamp();
             }
         }
 
@@ -77,7 +77,6 @@ class CallController extends Controller
                 ->orderBy($sort_condition, $sort_direction)
                 ->paginate(15);
         }
-
 
         return view('call.index')->with([
             'model' => $model,
@@ -170,6 +169,20 @@ class CallController extends Controller
 
     public function www()
     {
+        $total_calls = Call::getTotalCalls();
+        $incoming_calls = Call::getIncomingCalls();
+        $outgoing_calls = Call::getOutgoingCalls();
+        $avg_duration = Call::getAvgDuration();
+        $max_duration = Call::getMaxDuration();
+        $most_recent_number = Call::getMostRecentNum();
 
+        return view('call.www')->with([
+            'total_calls' => $total_calls,
+            'incoming_calls' => $incoming_calls,
+            'outgoing_calls' => $outgoing_calls,
+            'avg_duration' => $avg_duration,
+            'max_duration' => $max_duration,
+            'most_recent_number' => $most_recent_number
+        ]);
     }
 }
