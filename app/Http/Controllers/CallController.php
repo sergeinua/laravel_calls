@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Call;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-
+use Validator;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Redirect;
 use App\Http\Requests;
 
 class CallController extends Controller
@@ -27,6 +29,7 @@ class CallController extends Controller
         //links & model sorting
         if ($request->isMethod('get')) {
             $sort = $request->input('sort');
+
             switch ($sort) {
                 case ('sender_num') :
                     $sort_sender_num = 'sender_num_desc';
@@ -54,11 +57,27 @@ class CallController extends Controller
                     $sort_direction = 'desc';
                     break;
             }
+
+            if ($date_start = $request->input('sort_date_start')) {
+                $date_start = \DateTime::createFromFormat("d/m/Y", $date_start)->getTimestamp();
+            }
+            if ($date_end = $request->input('sort_date_end')) {
+                $date_end = \DateTime::createFromFormat("d/m/Y", $date_end)->getTimestamp();
+            }
         }
 
-        $model = DB::table('call')
-            ->orderBy($sort_condition, $sort_direction)
-            ->paginate(15);
+        if ($date_start && $date_end) {
+            $model = DB::table('call')
+                ->orderBy($sort_condition, $sort_direction)
+                ->where('time_init', '<=', $date_end)
+                ->where('time_init', '>=', $date_start)
+                ->paginate(15);
+        } else {
+            $model = DB::table('call')
+                ->orderBy($sort_condition, $sort_direction)
+                ->paginate(15);
+        }
+
 
         return view('call.index')->with([
             'model' => $model,
@@ -108,7 +127,9 @@ class CallController extends Controller
      */
     public function edit($id)
     {
-        //
+        $model = Call::findOrFail($id);
+
+        return view('call.edit')->with(['model' => $model]);
     }
 
     /**
@@ -120,7 +141,17 @@ class CallController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $validator = Validator::make($request->all(), ['comment' => 'required']);
+        if ($validator->fails()) {
+            Session::flash('error', 'Comment can\'t be blank');
+        } else {
+            $model = Call::findOrfail($id);
+            $model->comment = $request->input('comment');
+            $model->save();
+            Session::flash('success', 'Comment was updated successfully');
+        }
+
+        return Redirect::to('/');
     }
 
     /**
@@ -131,7 +162,10 @@ class CallController extends Controller
      */
     public function destroy($id)
     {
-        //
+        Call::destroy($id);
+        Session::flash('success', 'Call was deleted successfully');
+
+        return Redirect::to('/');
     }
 
     public function www()

@@ -5,3 +5,7 @@ td, th {
 table {
     width: 100%;
 }
+
+#date_picker_form {
+    display: none;
+}

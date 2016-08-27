@@ -13,4 +13,10 @@
 
 Route::get('/', 'CallController@index');
 
+Route::get('/call/edit/{id}', 'CallController@edit');
+
+Route::post('/call/update/{id}', 'CallController@update');
+
+Route::get('/call/delete/{id}', 'CallController@destroy');
+
 Route::get('/www', 'CallController@www');
